@@ -12,13 +12,13 @@ public interface VisitRepository extends JpaRepository<Visit, Long> {
 
     @Query("""
             SELECT new practicum.ru.visit.dto.VisitCountDto(
-                MIN(v.id), 
-                MIN(v.app), 
-                v.uri, 
-                MIN(v.ip), 
-                MIN(v.timestamp), 
+                MIN(v.id),
+                MIN(v.app),
+                v.uri,
+                MIN(v.ip),
+                MIN(v.timestamp),
                 COUNT(v))
-            FROM Visit v 
+            FROM Visit v
             WHERE v.timestamp BETWEEN :start AND :end
             GROUP BY v.uri
             ORDER BY COUNT(v) DESC
@@ -28,13 +28,13 @@ public interface VisitRepository extends JpaRepository<Visit, Long> {
 
     @Query("""
             SELECT new practicum.ru.visit.dto.VisitCountDto(
-                MIN(v.id), 
-                MIN(v.app), 
-                v.uri, 
-                MIN(v.ip), 
-                MIN(v.timestamp), 
+                MIN(v.id),
+                MIN(v.app),
+                v.uri,
+                MIN(v.ip),
+                MIN(v.timestamp),
                 COUNT(DISTINCT v.ip))
-            FROM Visit v 
+            FROM Visit v
             WHERE v.timestamp BETWEEN :start AND :end
             GROUP BY v.uri
             ORDER BY COUNT(DISTINCT v.ip) DESC
@@ -44,13 +44,13 @@ public interface VisitRepository extends JpaRepository<Visit, Long> {
 
     @Query("""
             SELECT new practicum.ru.visit.dto.VisitCountDto(
-                MIN(v.id), 
-                MIN(v.app), 
-                v.uri, 
-                MIN(v.ip), 
-                MIN(v.timestamp), 
+                MIN(v.id),
+                MIN(v.app),
+                v.uri,
+                MIN(v.ip),
+                MIN(v.timestamp),
                 COUNT(DISTINCT v.ip))
-            FROM Visit v 
+            FROM Visit v
             WHERE v.timestamp BETWEEN :startDate AND :endDate
               AND v.uri IN :uris
             GROUP BY v.uri
