@@ -28,7 +28,7 @@ public class VisitController {
     public List<VisitGetResponseDto> getVisits(@RequestParam LocalDateTime start,
                                                @RequestParam LocalDateTime end,
                                                @RequestParam(required = false) List<String> uris,
-                                               @RequestParam(required = false, defaultValue = "false") boolean unique){
+                                               @RequestParam(required = false, defaultValue = "false") boolean unique) {
         return visitService.getVisits(start, end, uris, unique);
     }
 }
