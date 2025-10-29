@@ -1,14 +1,42 @@
 services:
   stats-server:
+    build:
+      context: ./statistic
+      dockerfile: Dockerfile
     ports:
       - "9090:9090"
+    depends_on:
+      - stats-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://stats-db:5432/stats
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
 
   stats-db:
     image: postgres:16.1
+    environment:
+      POSTGRES_DB: stats
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
 
   ewm-service:
+    build:  # ← ДОБАВЬТЕ ЭТОТ БЛОК
+      context: ./product
+      dockerfile: Dockerfile
     ports:
       - "8080:8080"
+    depends_on:
+      - ewm-db
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://ewm-db:5432/ewm
+      SPRING_DATASOURCE_USERNAME: postgres
+      SPRING_DATASOURCE_PASSWORD: password
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
 
   ewm-db:
     image: postgres:16.1
+    environment:
+      POSTGRES_DB: ewm
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
