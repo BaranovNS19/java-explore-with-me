@@ -1,4 +1,4 @@
-package practicum.ru.visit.dto;
+package practicum.ru.statistic.product.visit.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

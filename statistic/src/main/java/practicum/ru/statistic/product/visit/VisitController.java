@@ -1,10 +1,10 @@
-package practicum.ru.visit;
+package practicum.ru.statistic.product.visit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
-import practicum.ru.visit.dto.VisitGetResponseDto;
-import practicum.ru.visit.dto.VisitPostRequestDto;
+import practicum.ru.statistic.product.visit.dto.VisitGetResponseDto;
+import practicum.ru.statistic.product.visit.dto.VisitPostRequestDto;
 
 import java.time.LocalDateTime;
 import java.util.List;

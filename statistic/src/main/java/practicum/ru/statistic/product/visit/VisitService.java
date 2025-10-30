@@ -1,7 +1,7 @@
-package practicum.ru.visit;
+package practicum.ru.statistic.product.visit;
 
-import practicum.ru.visit.dto.VisitGetResponseDto;
-import practicum.ru.visit.dto.VisitPostRequestDto;
+import practicum.ru.statistic.product.visit.dto.VisitGetResponseDto;
+import practicum.ru.statistic.product.visit.dto.VisitPostRequestDto;
 
 import java.time.LocalDateTime;
 import java.util.List;

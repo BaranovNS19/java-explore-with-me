@@ -1,4 +1,4 @@
-package practicum.ru.visit;
+package practicum.ru.statistic.product.visit;
 
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;

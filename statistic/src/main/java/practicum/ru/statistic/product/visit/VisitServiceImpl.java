@@ -1,10 +1,10 @@
-package practicum.ru.visit;
+package practicum.ru.statistic.product.visit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import practicum.ru.visit.dto.VisitCountDto;
-import practicum.ru.visit.dto.VisitGetResponseDto;
-import practicum.ru.visit.dto.VisitPostRequestDto;
+import practicum.ru.statistic.product.visit.dto.VisitGetResponseDto;
+import practicum.ru.statistic.product.visit.dto.VisitPostRequestDto;
+import practicum.ru.statistic.product.visit.dto.VisitCountDto;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
