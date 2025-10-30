@@ -12,7 +12,7 @@ import java.util.List;
 public interface VisitRepository extends JpaRepository<Visit, Long> {
 
     @Query("""
-            SELECT new practicum.ru.statistic.dto.VisitCountDto(
+            SELECT new practicum.ru.statistic.visit.dto.VisitCountDto(
                 MIN(v.id),
                 MIN(v.app),
                 v.uri,
@@ -28,7 +28,7 @@ public interface VisitRepository extends JpaRepository<Visit, Long> {
                                                      @Param("end") LocalDateTime end);
 
     @Query("""
-            SELECT new practicum.ru.statistic.dto.VisitCountDto(
+            SELECT new practicum.ru.statistic.visit.dto.VisitCountDto(
                 MIN(v.id),
                 MIN(v.app),
                 v.uri,
@@ -44,7 +44,7 @@ public interface VisitRepository extends JpaRepository<Visit, Long> {
                                                      @Param("end") LocalDateTime end);
 
     @Query("""
-            SELECT new practicum.ru.statistic.dto.VisitCountDto(
+            SELECT new practicum.ru.statistic.visit.dto.VisitCountDto(
                 MIN(v.id),
                 MIN(v.app),
                 v.uri,
