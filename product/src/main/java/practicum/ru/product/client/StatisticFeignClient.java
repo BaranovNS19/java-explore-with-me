@@ -1,13 +1,13 @@
-package practicum.ru.statistic.product.client;
+package practicum.ru.product.client;
 
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
-import practicum.ru.statistic.product.dto.Visit;
-import practicum.ru.statistic.product.dto.VisitGetResponseDto;
-import practicum.ru.statistic.product.dto.VisitPostRequestDto;
+import practicum.ru.product.dto.VisitGetResponseDto;
+import practicum.ru.product.dto.VisitPostRequestDto;
+import practicum.ru.product.dto.Visit;
 
 
 import java.time.LocalDateTime;

@@ -1,4 +1,4 @@
-package practicum.ru.statistic.product.visit.dto;
+package practicum.ru.statistic.visit.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;

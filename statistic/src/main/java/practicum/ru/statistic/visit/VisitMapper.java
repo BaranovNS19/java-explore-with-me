@@ -1,9 +1,9 @@
-package practicum.ru.statistic.product.visit;
+package practicum.ru.statistic.visit;
 
 import org.springframework.stereotype.Component;
-import practicum.ru.statistic.product.visit.dto.VisitCountDto;
-import practicum.ru.statistic.product.visit.dto.VisitGetResponseDto;
-import practicum.ru.statistic.product.visit.dto.VisitPostRequestDto;
+import practicum.ru.statistic.visit.dto.VisitGetResponseDto;
+import practicum.ru.statistic.visit.dto.VisitPostRequestDto;
+import practicum.ru.statistic.visit.dto.VisitCountDto;
 
 @Component
 public class VisitMapper {

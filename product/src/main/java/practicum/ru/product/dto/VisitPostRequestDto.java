@@ -1,6 +1,5 @@
-package practicum.ru.statistic.product.visit;
+package practicum.ru.product.dto;
 
-import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -9,14 +8,10 @@ import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
-@Entity
-@Table(name = "visits")
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
-public class Visit {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
+public class VisitPostRequestDto {
     private Long id;
     @NotNull
     @NotBlank
@@ -28,6 +23,5 @@ public class Visit {
     @NotBlank
     private String ip;
     @NotNull
-    @Column(name = "timestamp_visit")
     private LocalDateTime timestamp;
 }
