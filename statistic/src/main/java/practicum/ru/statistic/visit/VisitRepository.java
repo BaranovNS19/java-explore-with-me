@@ -60,4 +60,22 @@ public interface VisitRepository extends JpaRepository<Visit, Long> {
     List<VisitCountDto> findUniqueUrisByUrisWithVisitCount(@Param("startDate") LocalDateTime startDate,
                                                            @Param("endDate") LocalDateTime endDate,
                                                            @Param("uris") List<String> uris);
+
+    @Query("""
+            SELECT new practicum.ru.statistic.visit.dto.VisitCountDto(
+                MIN(v.id),
+                MIN(v.app),
+                v.uri,
+                MIN(v.ip),
+                MIN(v.timestamp),
+                COUNT(v.ip))
+            FROM Visit v
+            WHERE v.timestamp BETWEEN :startDate AND :endDate
+              AND v.uri IN :uris
+            GROUP BY v.uri
+            ORDER BY COUNT(v.ip) DESC
+            """)
+    List<VisitCountDto> findAllUrisByUrisWithVisitCount(@Param("startDate") LocalDateTime startDate,
+                                                        @Param("endDate") LocalDateTime endDate,
+                                                        @Param("uris") List<String> uris);
 }

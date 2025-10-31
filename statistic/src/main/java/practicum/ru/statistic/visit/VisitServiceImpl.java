@@ -33,6 +33,8 @@ public class VisitServiceImpl implements VisitService {
             visits = visitRepository.findUniqueUrisWithVisitStats(start, end);
         } else if (unique && uris != null) {
             visits = visitRepository.findUniqueUrisByUrisWithVisitCount(start, end, uris);
+        } else if (!unique && uris != null) {
+            visits = visitRepository.findAllUrisByUrisWithVisitCount(start, end, uris);
         } else {
             visits = visitRepository.findUniqueUrisWithVisitCount(start, end);
         }
