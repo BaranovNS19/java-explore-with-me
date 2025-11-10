@@ -38,15 +38,13 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             "(:rangeStart IS NULL OR e.eventDate >= :rangeStart) AND " +
             "(:rangeEnd IS NULL OR e.eventDate <= :rangeEnd) AND " +
             "(:onlyAvailable = false OR e.confirmedRequests < e.participantLimit) AND " +
-            "e.state = 'PUBLISHED' AND " +
-            "(:sort IS NULL OR 1=1)")  // ← ФИКТИВНОЕ ИСПОЛЬЗОВАНИЕ sort
+            "e.state = 'PUBLISHED'")
     List<Event> findEvents(@Param("text") String text,
                            @Param("categories") List<Long> categories,
                            @Param("paid") Boolean paid,
                            @Param("rangeStart") LocalDateTime rangeStart,
                            @Param("rangeEnd") LocalDateTime rangeEnd,
-                           @Param("onlyAvailable") Boolean onlyAvailable,
-                           @Param("sort") String sort);
+                           @Param("onlyAvailable") Boolean onlyAvailable);
 
     @Query("SELECT e FROM Event e WHERE " +
             "(:users IS NULL OR e.initiator.id IN :users) AND " +
