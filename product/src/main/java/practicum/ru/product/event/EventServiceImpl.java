@@ -235,13 +235,17 @@ public class EventServiceImpl implements EventService {
         visitPostRequestDto.setTimestamp(LocalDateTime.now());
         statisticFeignClient.addVisit(visitPostRequestDto);
         log.info("Запрос в сервис статистики {} {} {}", request.getServerName(), request.getServerPort(), request.getRequestURI());
-        LocalDateTime start = null;
-        LocalDateTime end = null;
+        LocalDateTime start;
+        LocalDateTime end;
         if (rangeStart != null) {
             start = LocalDateTime.parse(rangeStart, formatter);
+        } else {
+            start = null;
         }
         if (rangeEnd != null) {
             end = LocalDateTime.parse(rangeEnd, formatter);
+        } else {
+            end = null;
         }
         if (rangeStart != null && rangeEnd != null) {
             if (end.isBefore(start)) {
@@ -253,25 +257,28 @@ public class EventServiceImpl implements EventService {
 //        for (Event e : events) {
 //            result.add(eventMapper.toEventShortDto(e));
 //        }
-        // 1. УБРАТЬ onlyAvailable из вызова репозитория
-        List<Event> events = eventRepository.findEvents(text, categories, paid, start, end);
+        // Получаем ВСЕ опубликованные события
+        List<Event> events = eventRepository.findEvents();
 
-        // 2. ДОБАВИТЬ фильтрацию onlyAvailable в Java коде
-        if (onlyAvailable != null && onlyAvailable) {
-            events = events.stream()
-                    .filter(e -> e.getConfirmedRequests() < e.getParticipantLimit())
-                    .collect(Collectors.toList());
-        }
+        // ФИЛЬТРАЦИЯ В JAVA КОДЕ (используем УЖЕ распарсенные даты)
+        events = events.stream()
+                .filter(e -> text == null ||
+                        e.getAnnotation().toLowerCase().contains(text.toLowerCase()) ||
+                        e.getDescription().toLowerCase().contains(text.toLowerCase()))
+                .filter(e -> categories == null || categories.isEmpty() || categories.contains(e.getCategory().getId()))
+                .filter(e -> paid == null || e.isPaid() == paid)
+                .filter(e -> start == null || e.getEventDate().isAfter(start) || e.getEventDate().isEqual(start))
+                .filter(e -> end == null || e.getEventDate().isBefore(end) || e.getEventDate().isEqual(end))
+                .filter(e -> onlyAvailable == null || !onlyAvailable || e.getConfirmedRequests() < e.getParticipantLimit())
+                .collect(Collectors.toList());
 
-        // 3. ДОБАВИТЬ сортировку в Java коде
+        // СОРТИРОВКА
         if ("VIEWS".equals(sort)) {
             events.sort(Comparator.comparing(Event::getViews).reversed());
         } else {
-            // Сортировка по EVENT_DATE или другая по умолчанию
             events.sort(Comparator.comparing(Event::getEventDate));
         }
 
-        // 4. Преобразование в DTO после сортировки
         List<EventShortDto> result = events.stream()
                 .map(eventMapper::toEventShortDto)
                 .toList();
