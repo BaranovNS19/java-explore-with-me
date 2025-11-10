@@ -233,7 +233,7 @@ public class EventServiceImpl implements EventService {
         visitPostRequestDto.setUri(request.getRequestURI());
         visitPostRequestDto.setTimestamp(LocalDateTime.now());
         statisticFeignClient.addVisit(visitPostRequestDto);
-        log.info("Запрос в сервис статистики {}", request.getPathInfo());
+        log.info("Запрос в сервис статистики {} {} {}", request.getServerName(), request.getServerPort(), request.getRequestURI());
         LocalDateTime start = null;
         LocalDateTime end = null;
         if (rangeStart != null) {
