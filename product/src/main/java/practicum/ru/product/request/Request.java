@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Request {
-    @Column(columnDefinition = "TIMESTAMP(9)")
+    @Column(columnDefinition = "TIMESTAMP(9)", updatable = false)
     private LocalDateTime created;
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "event_id")
