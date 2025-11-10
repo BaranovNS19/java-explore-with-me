@@ -4,6 +4,7 @@ import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.hibernate.annotations.CreationTimestamp;
 import practicum.ru.product.event.Event;
 import practicum.ru.product.user.User;
 
@@ -15,6 +16,7 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 @NoArgsConstructor
 public class Request {
+    @CreationTimestamp
     @Column(columnDefinition = "TIMESTAMP(9)", updatable = false)
     private LocalDateTime created;
     @ManyToOne(fetch = FetchType.LAZY)
