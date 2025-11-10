@@ -18,6 +18,7 @@ import practicum.ru.product.user.UserService;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -247,11 +248,33 @@ public class EventServiceImpl implements EventService {
                 throw new BadRequestException("Дата окончания не может быть раньше даты начала");
             }
         }
-        List<Event> events = eventRepository.findEvents(text, categories, paid, start, end, onlyAvailable/*, sort*/);
-        List<EventShortDto> result = new ArrayList<>();
-        for (Event e : events) {
-            result.add(eventMapper.toEventShortDto(e));
+//        List<Event> events = eventRepository.findEvents(text, categories, paid, start, end, onlyAvailable/*, sort*/);
+//        List<EventShortDto> result = new ArrayList<>();
+//        for (Event e : events) {
+//            result.add(eventMapper.toEventShortDto(e));
+//        }
+        // 1. УБРАТЬ onlyAvailable из вызова репозитория
+        List<Event> events = eventRepository.findEvents(text, categories, paid, start, end);
+
+        // 2. ДОБАВИТЬ фильтрацию onlyAvailable в Java коде
+        if (onlyAvailable != null && onlyAvailable) {
+            events = events.stream()
+                    .filter(e -> e.getConfirmedRequests() < e.getParticipantLimit())
+                    .collect(Collectors.toList());
         }
+
+        // 3. ДОБАВИТЬ сортировку в Java коде
+        if ("VIEWS".equals(sort)) {
+            events.sort(Comparator.comparing(Event::getViews).reversed());
+        } else {
+            // Сортировка по EVENT_DATE или другая по умолчанию
+            events.sort(Comparator.comparing(Event::getEventDate));
+        }
+
+        // 4. Преобразование в DTO после сортировки
+        List<EventShortDto> result = events.stream()
+                .map(eventMapper::toEventShortDto)
+                .toList();
         return result.stream()
                 .skip(from)
                 .limit(size)
