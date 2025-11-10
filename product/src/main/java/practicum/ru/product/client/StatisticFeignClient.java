@@ -9,8 +9,6 @@ import practicum.ru.product.dto.Visit;
 import practicum.ru.product.dto.VisitGetResponseDto;
 import practicum.ru.product.dto.VisitPostRequestDto;
 
-
-import java.time.LocalDateTime;
 import java.util.List;
 
 @FeignClient(
