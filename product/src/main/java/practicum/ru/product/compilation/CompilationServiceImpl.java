@@ -4,6 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import practicum.ru.product.dto.CompilationDto;
 import practicum.ru.product.dto.NewCompilationDto;
+import practicum.ru.product.dto.UpdateCompilationRequestDto;
 import practicum.ru.product.event.Event;
 import practicum.ru.product.event.EventService;
 import practicum.ru.product.exception.NotFoundException;
@@ -31,8 +32,14 @@ public class CompilationServiceImpl implements CompilationService {
 
     @Override
     public CompilationDto createCompilation(NewCompilationDto newCompilationDto) {
-        Compilation compilation = compilationRepository.save(compilationMapper.toCompilation(newCompilationDto,
-                getEventsByIds(newCompilationDto.getEvents())));
+        Compilation compilation;
+        if (newCompilationDto.getEvents() != null) {
+            compilation = compilationRepository.save(compilationMapper.toCompilation(newCompilationDto,
+                    getEventsByIds(newCompilationDto.getEvents())));
+        } else {
+            compilation = compilationRepository.save(compilationMapper.toCompilation(newCompilationDto,
+                    null));
+        }
         return compilationMapper.toCompilationDto(compilation);
     }
 
@@ -65,6 +72,27 @@ public class CompilationServiceImpl implements CompilationService {
     public void deleteCompilation(Long compId) {
         getCompilationById(compId);
         compilationRepository.deleteById(compId);
+    }
+
+    @Override
+    public CompilationDto updateCompilation(Long compId, UpdateCompilationRequestDto updateCompilationRequestDto) {
+        Compilation compilation = compilationRepository.findById(compId)
+                .orElseThrow(() -> new NotFoundException("Подборка с id [" + compId + "] не найден"));
+        if (updateCompilationRequestDto.getEvents() != null) {
+            Set<Event> events = new HashSet<>();
+            for (Long id : updateCompilationRequestDto.getEvents()) {
+                events.add(eventService.getEventById(id));
+            }
+            compilation.setEvents(events);
+        }
+        if (updateCompilationRequestDto.getPinned() != null) {
+            compilation.setPinned(updateCompilationRequestDto.getPinned());
+        }
+        if (updateCompilationRequestDto.getTitle() != null) {
+            compilation.setTitle(updateCompilationRequestDto.getTitle());
+        }
+        compilationRepository.save(compilation);
+        return compilationMapper.toCompilationDto(compilation);
     }
 
     private Set<Event> getEventsByIds(Set<Long> ids) {

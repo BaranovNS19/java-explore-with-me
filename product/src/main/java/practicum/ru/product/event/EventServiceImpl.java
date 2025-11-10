@@ -1,16 +1,21 @@
 package practicum.ru.product.event;
 
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import practicum.ru.product.category.Category;
 import practicum.ru.product.category.CategoryService;
+import practicum.ru.product.client.StatisticFeignClient;
 import practicum.ru.product.dto.*;
+import practicum.ru.product.exception.BadRequestException;
+import practicum.ru.product.exception.ConflictException;
 import practicum.ru.product.exception.NotFoundException;
 import practicum.ru.product.user.User;
 import practicum.ru.product.user.UserMapper;
 import practicum.ru.product.user.UserService;
 
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -23,21 +28,27 @@ public class EventServiceImpl implements EventService {
     private final EventMapper eventMapper;
     private final UserService userService;
     private final UserMapper userMapper;
+    private final StatisticFeignClient statisticFeignClient;
 
     @Autowired
     public EventServiceImpl(EventRepository eventRepository, CategoryService categoryService, EventMapper eventMapper,
-                            UserService userService, UserMapper userMapper) {
+                            UserService userService, UserMapper userMapper, StatisticFeignClient statisticFeignClient) {
         this.eventRepository = eventRepository;
         this.categoryService = categoryService;
         this.eventMapper = eventMapper;
         this.userService = userService;
         this.userMapper = userMapper;
+        this.statisticFeignClient = statisticFeignClient;
     }
 
     @Override
     public EventFullDto createEvent(Long userId, NewEventDto newEventDto) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         Category category = categoryService.getCategoryById(newEventDto.getCategory());
         User user = userService.getUserById(userId);
+        if (LocalDateTime.parse(newEventDto.getEventDate(), formatter).isBefore(LocalDateTime.now())) {
+            throw new BadRequestException("Дата события не может быть раньше текущей");
+        }
         Event event = eventRepository.save(eventMapper.toEvent(newEventDto, category, user, Status.PENDING));
         return eventMapper.toEventFullDto(event, userMapper.toUserShortDto(user),
                 eventMapper.toLocationDto(event.getLocation()));
@@ -76,6 +87,7 @@ public class EventServiceImpl implements EventService {
     public EventFullDto updateEvent(UpdateEventUserRequestDto updateEventUserRequestDto, Long userId, Long eventId) {
         Event event = getEventById(eventId);
         getEventByUser(userId, eventId);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
         if (updateEventUserRequestDto.getAnnotation() != null) {
             event.setAnnotation(updateEventUserRequestDto.getAnnotation());
@@ -87,6 +99,9 @@ public class EventServiceImpl implements EventService {
             event.setDescription(updateEventUserRequestDto.getDescription());
         }
         if (updateEventUserRequestDto.getEventDate() != null) {
+            if (LocalDateTime.parse(updateEventUserRequestDto.getEventDate(), formatter).isBefore(LocalDateTime.now())) {
+                throw new BadRequestException("Дата события не может быть раньше текущей даты");
+            }
             event.setEventDate(LocalDateTime.parse(updateEventUserRequestDto.getEventDate()));
         }
         if (updateEventUserRequestDto.getLocation() != null) {
@@ -118,9 +133,27 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventFullDto getEventFullDtoById(Long id) {
+    public EventFullDto getEventFullDtoById(Long id, HttpServletRequest request) {
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new NotFoundException("Событие с id [" + id + "] не найдено"));
+        if (!event.getState().equals(Status.PUBLISHED)) {
+            throw new NotFoundException("Событие с id [" + id + "] не найдено");
+        }
+        VisitPostRequestDto visitPostRequestDto = new VisitPostRequestDto();
+        visitPostRequestDto.setApp("ewm-main-service");
+        visitPostRequestDto.setIp(request.getRemoteAddr());
+        visitPostRequestDto.setUri(request.getRequestURI());
+        visitPostRequestDto.setTimestamp(LocalDateTime.now());
+        statisticFeignClient.addVisit(visitPostRequestDto);
+        List<String> uris = new ArrayList<>();
+        uris.add(request.getRequestURI());
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        String start = LocalDateTime.now().minusDays(2).format(formatter);
+        String end = LocalDateTime.now().plusHours(1).format(formatter);
+        List<VisitGetResponseDto> visits = statisticFeignClient.getVisits(start, end, uris,
+                true);
+        event.setViews(Math.toIntExact(visits.getFirst().getHits()));
+        eventRepository.save(event);
         return eventMapper.toEventFullDto(event, userMapper.toUserShortDto(event.getInitiator()),
                 eventMapper.toLocationDto(event.getLocation()));
     }
@@ -139,6 +172,9 @@ public class EventServiceImpl implements EventService {
             event.setDescription(updateEventAdminRequestDto.getDescription());
         }
         if (updateEventAdminRequestDto.getEventDate() != null) {
+            if (updateEventAdminRequestDto.getEventDate().isBefore(LocalDateTime.now())) {
+                throw new BadRequestException("Дата события не может быть раньше текущей даты");
+            }
             event.setEventDate(updateEventAdminRequestDto.getEventDate());
         }
         if (updateEventAdminRequestDto.getLocation() != null) {
@@ -156,8 +192,87 @@ public class EventServiceImpl implements EventService {
         if (updateEventAdminRequestDto.getTitle() != null) {
             event.setTitle(updateEventAdminRequestDto.getTitle());
         }
+        if (updateEventAdminRequestDto.getStateAction() != null) {
+            if (event.getState().equals(Status.PUBLISHED) &&
+                    updateEventAdminRequestDto.getStateAction().equals(StateAction.REJECT_EVENT)) {
+                throw new ConflictException("Нельзя отменять опубликованое событие");
+            }
+            if (event.getState().equals(Status.PUBLISHED) &&
+                    updateEventAdminRequestDto.getStateAction().equals(StateAction.PUBLISH_EVENT)) {
+                throw new ConflictException("Событие уже опубликовано");
+            }
+            if (event.getState().equals(Status.CANCELED) &&
+                    updateEventAdminRequestDto.getStateAction().equals(StateAction.PUBLISH_EVENT)) {
+                throw new ConflictException("Событие уже опубликовано");
+            }
+            if (updateEventAdminRequestDto.getStateAction().equals(StateAction.PUBLISH_EVENT)) {
+                event.setState(Status.PUBLISHED);
+            }
+            if (updateEventAdminRequestDto.getStateAction().equals(StateAction.REJECT_EVENT)) {
+                event.setState(Status.CANCELED);
+            }
+        }
         eventRepository.save(event);
         return eventMapper.toEventFullDto(event, userMapper.toUserShortDto(event.getInitiator()),
                 eventMapper.toLocationDto(event.getLocation()));
+    }
+
+    @Override
+    public List<EventShortDto> getEvents(String text, List<Long> categories, Boolean paid, String rangeStart,
+                                         String rangeEnd, Boolean onlyAvailable, String sort, int from, int size,
+                                         HttpServletRequest request) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        VisitPostRequestDto visitPostRequestDto = new VisitPostRequestDto();
+        visitPostRequestDto.setApp("ewm-main-service");
+        visitPostRequestDto.setIp(request.getRemoteAddr());
+        visitPostRequestDto.setUri(request.getRequestURI());
+        visitPostRequestDto.setTimestamp(LocalDateTime.now());
+        statisticFeignClient.addVisit(visitPostRequestDto);
+        LocalDateTime start = null;
+        LocalDateTime end = null;
+        if (rangeStart != null) {
+            start = LocalDateTime.parse(rangeStart, formatter);
+        }
+        if (rangeEnd != null) {
+            end = LocalDateTime.parse(rangeEnd, formatter);
+        }
+        if (rangeStart != null && rangeEnd != null) {
+            if (end.isBefore(start)) {
+                throw new BadRequestException("Дата окончания не может быть раньше даты начала");
+            }
+        }
+        List<Event> events = eventRepository.findEvents(text, categories, paid, start, end, onlyAvailable, sort);
+        List<EventShortDto> result = new ArrayList<>();
+        for (Event e : events) {
+            result.add(eventMapper.toEventShortDto(e));
+        }
+        return result.stream()
+                .skip(from)
+                .limit(size)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public List<EventFullDto> getEventsByAdmin(List<Long> users, List<String> states, List<Long> categories, String rangeStart,
+                                               String rangeEnd, int from, int size) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime start = null;
+        LocalDateTime end = null;
+        if (rangeStart != null) {
+            start = LocalDateTime.parse(rangeStart, formatter);
+        }
+        if (rangeEnd != null) {
+            end = LocalDateTime.parse(rangeEnd, formatter);
+        }
+        List<Event> events = eventRepository.findEventsByAdmin(users, states, categories, start, end);
+        List<EventFullDto> result = new ArrayList<>();
+        for (Event e : events) {
+            result.add(eventMapper.toEventFullDto(e, userMapper.toUserShortDto(e.getInitiator()),
+                    eventMapper.toLocationDto(e.getLocation())));
+        }
+        return result.stream()
+                .skip(from)
+                .limit(size)
+                .collect(Collectors.toList());
     }
 }

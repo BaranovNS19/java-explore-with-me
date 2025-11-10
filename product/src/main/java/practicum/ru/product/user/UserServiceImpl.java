@@ -2,6 +2,7 @@ package practicum.ru.product.user;
 
 import org.springframework.stereotype.Service;
 import practicum.ru.product.dto.UserDto;
+import practicum.ru.product.exception.ConflictException;
 import practicum.ru.product.exception.NotFoundException;
 
 import java.util.List;
@@ -19,6 +20,9 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public User createUser(UserDto userDto) {
+        if (userRepository.findByEmail(userDto.getEmail()) != null) {
+            throw new ConflictException("пользователь с почтой [" + userDto.getEmail() + "] уже существует");
+        }
         return userRepository.save(userMapper.toUser(userDto));
     }
 
@@ -31,7 +35,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<User> getUsers(List<Long> ids, int from, int size) {
         List<User> users;
-        if (ids.isEmpty()) {
+        if (ids == null || ids.isEmpty()) {
             users = userRepository.findAll();
         } else {
             users = userRepository.findAllById(ids);

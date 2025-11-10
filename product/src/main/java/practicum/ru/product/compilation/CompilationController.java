@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import practicum.ru.product.dto.CompilationDto;
 import practicum.ru.product.dto.NewCompilationDto;
+import practicum.ru.product.dto.UpdateCompilationRequestDto;
 
 import java.util.List;
 
@@ -41,5 +42,11 @@ public class CompilationController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteCompilation(@PathVariable Long compId) {
         compilationService.deleteCompilation(compId);
+    }
+
+    @PatchMapping("/admin/compilations/{compId}")
+    public CompilationDto updateCompilation(@PathVariable Long compId,
+                                            @RequestBody @Valid UpdateCompilationRequestDto updateCompilationRequestDto) {
+        return compilationService.updateCompilation(compId, updateCompilationRequestDto);
     }
 }

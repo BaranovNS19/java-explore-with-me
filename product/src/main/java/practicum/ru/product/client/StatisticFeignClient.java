@@ -23,8 +23,8 @@ public interface StatisticFeignClient {
     Visit addVisit(@RequestBody VisitPostRequestDto visit);
 
     @GetMapping("/stats")
-    List<VisitGetResponseDto> getVisits(@RequestParam LocalDateTime start,
-                                        @RequestParam LocalDateTime end,
+    List<VisitGetResponseDto> getVisits(@RequestParam String start,
+                                        @RequestParam String end,
                                         @RequestParam(required = false) List<String> uris,
                                         @RequestParam(required = false, defaultValue = "false") boolean unique);
 }

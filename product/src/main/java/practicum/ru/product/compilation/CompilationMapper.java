@@ -37,8 +37,10 @@ public class CompilationMapper {
         compilationDto.setTitle(compilation.getTitle());
         Set<Event> events = compilation.getEvents();
         Set<EventShortDto> eventsShort = new HashSet<>();
-        for (Event e : events) {
-            eventsShort.add(eventMapper.toEventShortDto(e));
+        if (events != null) {
+            for (Event e : events) {
+                eventsShort.add(eventMapper.toEventShortDto(e));
+            }
         }
         compilationDto.setEvents(eventsShort);
         return compilationDto;

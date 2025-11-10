@@ -1,5 +1,6 @@
 package practicum.ru.product.dto;
 
+import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -20,6 +21,7 @@ public class UpdateEventUserRequestDto {
     private String eventDate;
     private Location location;
     private Boolean paid;
+    @Min(value = 0, message = "Лимит участников не может быть отрицательным")
     private Integer participantLimit;
     private Boolean requestModeration;
     @Size(min = 3, max = 120, message = "Длина заголовка должна быть от {min} до {max} символов")

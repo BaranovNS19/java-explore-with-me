@@ -5,7 +5,6 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import practicum.ru.product.event.Event;
-import practicum.ru.product.event.Status;
 import practicum.ru.product.user.User;
 
 import java.time.LocalDateTime;
@@ -27,6 +26,6 @@ public class Request {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "requester_id")
     private User requester;
-    private Status status;
+    private StatusRequest status;
 
 }

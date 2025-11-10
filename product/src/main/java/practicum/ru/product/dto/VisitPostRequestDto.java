@@ -1,5 +1,6 @@
 package practicum.ru.product.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -22,6 +23,7 @@ public class VisitPostRequestDto {
     @NotNull
     @NotBlank
     private String ip;
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @NotNull
     private LocalDateTime timestamp;
 }
