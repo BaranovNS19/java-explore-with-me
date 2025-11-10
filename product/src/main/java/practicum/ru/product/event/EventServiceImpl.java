@@ -288,26 +288,48 @@ public class EventServiceImpl implements EventService {
     public List<EventFullDto> getEventsByAdmin(List<Long> users, List<String> states, List<Long> categories, String rangeStart,
                                                String rangeEnd, int from, int size) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        LocalDateTime start = null;
-        LocalDateTime end = null;
+
+        // Правильная инициализация дат
+        LocalDateTime startDateTime;
+        LocalDateTime endDateTime;
         if (rangeStart != null) {
-            start = LocalDateTime.parse(rangeStart, formatter);
+            startDateTime = LocalDateTime.parse(rangeStart, formatter);
+        } else {
+            startDateTime = null;
         }
         if (rangeEnd != null) {
-            end = LocalDateTime.parse(rangeEnd, formatter);
+            endDateTime = LocalDateTime.parse(rangeEnd, formatter);
+        } else {
+            endDateTime = null;
         }
-        List<Status> statusList = null;
-        if (states != null) {
+
+        // Преобразование states ОДИН раз
+        List<Status> statusList;
+        if (states != null && !states.isEmpty()) {
             statusList = states.stream()
                     .map(Status::valueOf)
                     .collect(Collectors.toList());
+        } else {
+            statusList = null;
         }
-        List<Event> events = eventRepository.findEventsByAdmin(users, statusList, categories, start, end);
-        List<EventFullDto> result = new ArrayList<>();
-        for (Event e : events) {
-            result.add(eventMapper.toEventFullDto(e, userMapper.toUserShortDto(e.getInitiator()),
-                    eventMapper.toLocationDto(e.getLocation())));
-        }
+
+        // Получаем ВСЕ события
+        List<Event> events = eventRepository.findAllEvents();
+
+        // ФИЛЬТРАЦИЯ В JAVA КОДЕ
+        events = events.stream()
+                .filter(e -> users == null || users.isEmpty() || users.contains(e.getInitiator().getId()))
+                .filter(e -> statusList == null || statusList.isEmpty() || statusList.contains(e.getState()))
+                .filter(e -> categories == null || categories.isEmpty() || categories.contains(e.getCategory().getId()))
+                .filter(e -> startDateTime == null || e.getEventDate().isAfter(startDateTime) || e.getEventDate().isEqual(startDateTime))
+                .filter(e -> endDateTime == null || e.getEventDate().isBefore(endDateTime) || e.getEventDate().isEqual(endDateTime))
+                .collect(Collectors.toList());  // Используем collect
+
+        List<EventFullDto> result = events.stream()
+                .map(e -> eventMapper.toEventFullDto(e, userMapper.toUserShortDto(e.getInitiator()),
+                        eventMapper.toLocationDto(e.getLocation())))
+                .collect(Collectors.toList());
+
         return result.stream()
                 .skip(from)
                 .limit(size)
