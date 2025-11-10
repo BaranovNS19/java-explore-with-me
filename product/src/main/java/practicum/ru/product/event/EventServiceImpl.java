@@ -257,10 +257,7 @@ public class EventServiceImpl implements EventService {
 //        for (Event e : events) {
 //            result.add(eventMapper.toEventShortDto(e));
 //        }
-        // Получаем ВСЕ опубликованные события
         List<Event> events = eventRepository.findEvents();
-
-        // ФИЛЬТРАЦИЯ В JAVA КОДЕ (используем УЖЕ распарсенные даты)
         events = events.stream()
                 .filter(e -> text == null ||
                         e.getAnnotation().toLowerCase().contains(text.toLowerCase()) ||
@@ -272,7 +269,6 @@ public class EventServiceImpl implements EventService {
                 .filter(e -> onlyAvailable == null || !onlyAvailable || e.getConfirmedRequests() < e.getParticipantLimit())
                 .collect(Collectors.toList());
 
-        // СОРТИРОВКА
         if ("VIEWS".equals(sort)) {
             events.sort(Comparator.comparing(Event::getViews).reversed());
         } else {
@@ -300,7 +296,13 @@ public class EventServiceImpl implements EventService {
         if (rangeEnd != null) {
             end = LocalDateTime.parse(rangeEnd, formatter);
         }
-        List<Event> events = eventRepository.findEventsByAdmin(users, states, categories, start, end);
+        List<Status> statusList = null;
+        if (states != null) {
+            statusList = states.stream()
+                    .map(Status::valueOf)
+                    .collect(Collectors.toList());
+        }
+        List<Event> events = eventRepository.findEventsByAdmin(users, statusList, categories, start, end);
         List<EventFullDto> result = new ArrayList<>();
         for (Event e : events) {
             result.add(eventMapper.toEventFullDto(e, userMapper.toUserShortDto(e.getInitiator()),

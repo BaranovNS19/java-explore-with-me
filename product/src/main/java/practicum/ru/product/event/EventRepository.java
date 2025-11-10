@@ -34,14 +34,26 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             "e.state = 'PUBLISHED'")
     List<Event> findEvents();
 
+//    @Query("SELECT e FROM Event e WHERE " +
+//            "(:users IS NULL OR e.initiator.id IN :users) AND " +
+//            "(:states IS NULL OR e.state IN :states) AND " +
+//            "(:categories IS NULL OR e.category.id IN :categories) AND " +
+//            "(:rangeStart IS NULL OR e.eventDate >= :rangeStart) AND " +
+//            "(:rangeEnd IS NULL OR e.eventDate <= :rangeEnd)")
+//    List<Event> findEventsByAdmin(@Param("users") List<Long> users,
+//                                  @Param("states") List<String> states,
+//                                  @Param("categories") List<Long> categories,
+//                                  @Param("rangeStart") LocalDateTime rangeStart,
+//                                  @Param("rangeEnd") LocalDateTime rangeEnd);
+
     @Query("SELECT e FROM Event e WHERE " +
             "(:users IS NULL OR e.initiator.id IN :users) AND " +
-            "(:states IS NULL OR e.state IN :states) AND " +
+            "(:states IS NULL OR e.state IN :states) AND " +  // states должен быть List<Status>
             "(:categories IS NULL OR e.category.id IN :categories) AND " +
             "(:rangeStart IS NULL OR e.eventDate >= :rangeStart) AND " +
             "(:rangeEnd IS NULL OR e.eventDate <= :rangeEnd)")
     List<Event> findEventsByAdmin(@Param("users") List<Long> users,
-                                  @Param("states") List<String> states,
+                                  @Param("states") List<Status> states,  // ← Изменить на List<Status>
                                   @Param("categories") List<Long> categories,
                                   @Param("rangeStart") LocalDateTime rangeStart,
                                   @Param("rangeEnd") LocalDateTime rangeEnd);
