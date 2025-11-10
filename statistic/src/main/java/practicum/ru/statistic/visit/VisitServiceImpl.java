@@ -2,6 +2,7 @@ package practicum.ru.statistic.visit;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import practicum.ru.statistic.exception.BadRequestException;
 import practicum.ru.statistic.visit.dto.VisitCountDto;
 import practicum.ru.statistic.visit.dto.VisitGetResponseDto;
 import practicum.ru.statistic.visit.dto.VisitPostRequestDto;
@@ -29,6 +30,9 @@ public class VisitServiceImpl implements VisitService {
     @Override
     public List<VisitGetResponseDto> getVisits(LocalDateTime start, LocalDateTime end, List<String> uris, boolean unique) {
         List<VisitCountDto> visits;
+        if (end.isBefore(start)) {
+            throw new BadRequestException("дата окончания не может быть раньше даты начала");
+        }
         if (unique && (uris == null || uris.isEmpty())) {
             visits = visitRepository.findUniqueUrisWithVisitStats(start, end);
         } else if (unique && uris != null) {
