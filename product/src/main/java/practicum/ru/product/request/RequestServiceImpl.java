@@ -55,7 +55,7 @@ public class RequestServiceImpl implements RequestService {
             throw new ConflictException("Событие [" + eventId + "] не опубликовано");
         }
         if (event.getParticipantLimit() != 0) {
-            if (event.getParticipantLimit() >= event.getConfirmedRequests()) {
+            if (event.getParticipantLimit() == event.getConfirmedRequests()) {
                 throw new ConflictException("исчерпан лимит заявок на событие [" + eventId + "]");
             }
         }
@@ -63,8 +63,10 @@ public class RequestServiceImpl implements RequestService {
         request.setRequester(user);
         request.setCreated(LocalDateTime.now());
         request.setEvent(event);
-        if (event.getParticipantLimit() == 0) {
+
+        if (!event.isRequestModeration() || event.getParticipantLimit() == 0) {
             request.setStatus(StatusRequest.CONFIRMED);
+            event.setConfirmedRequests(event.getConfirmedRequests() + 1);
         } else {
             request.setStatus(StatusRequest.PENDING);
         }
@@ -96,6 +98,10 @@ public class RequestServiceImpl implements RequestService {
         List<Request> requests = new ArrayList<>();
         for (Long requestId : eventRequestStatusUpdateRequestDto.getRequestIds()) {
             Request request = getRequestById(requestId);
+            if (request.getStatus().equals(StatusRequest.CONFIRMED) &&
+                    eventRequestStatusUpdateRequestDto.getStatus().equals(StatusRequest.REJECTED)) {
+                throw new ConflictException("невозможно отменить подтвержденный запрос");
+            }
             request.setStatus(eventRequestStatusUpdateRequestDto.getStatus());
             if (eventRequestStatusUpdateRequestDto.getStatus().equals(StatusRequest.CONFIRMED)) {
                 if (event.getParticipantLimit() > 0 &&

@@ -87,7 +87,10 @@ public class EventServiceImpl implements EventService {
     public EventFullDto updateEvent(UpdateEventUserRequestDto updateEventUserRequestDto, Long userId, Long eventId) {
         Event event = getEventById(eventId);
         getEventByUser(userId, eventId);
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+
+        if (event.getState().equals(Status.PUBLISHED)) {
+            throw new ConflictException("нельзя обновлять опубликованное событие");
+        }
 
         if (updateEventUserRequestDto.getAnnotation() != null) {
             event.setAnnotation(updateEventUserRequestDto.getAnnotation());
@@ -99,10 +102,10 @@ public class EventServiceImpl implements EventService {
             event.setDescription(updateEventUserRequestDto.getDescription());
         }
         if (updateEventUserRequestDto.getEventDate() != null) {
-            if (LocalDateTime.parse(updateEventUserRequestDto.getEventDate(), formatter).isBefore(LocalDateTime.now())) {
+            if (updateEventUserRequestDto.getEventDate().isBefore(LocalDateTime.now())) {
                 throw new BadRequestException("Дата события не может быть раньше текущей даты");
             }
-            event.setEventDate(LocalDateTime.parse(updateEventUserRequestDto.getEventDate()));
+            event.setEventDate(updateEventUserRequestDto.getEventDate());
         }
         if (updateEventUserRequestDto.getLocation() != null) {
             event.setLocation(updateEventUserRequestDto.getLocation());
