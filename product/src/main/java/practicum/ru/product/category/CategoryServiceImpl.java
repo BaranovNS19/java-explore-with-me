@@ -8,6 +8,7 @@ import practicum.ru.product.exception.ConflictException;
 import practicum.ru.product.exception.NotFoundException;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Service
@@ -34,7 +35,8 @@ public class CategoryServiceImpl implements CategoryService {
     @Override
     public Category updateCategory(Long catId, CategoryDto categoryDto) {
         Category category = getCategoryById(catId);
-        if (categoryRepository.findByName(categoryDto.getName()) != null) {
+        if (categoryRepository.findByName(categoryDto.getName()) != null &&
+                !Objects.equals(categoryRepository.findByName(categoryDto.getName()).getId(), catId)) {
             throw new ConflictException("категория с именем [" + categoryDto.getName() + "] уже существует");
         }
         category.setName(categoryDto.getName());
