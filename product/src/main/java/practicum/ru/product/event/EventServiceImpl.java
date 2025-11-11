@@ -245,7 +245,7 @@ public class EventServiceImpl implements EventService {
                 throw new BadRequestException("Дата окончания не может быть раньше даты начала");
             }
         }
-        List<Event> events = eventRepository.findEvents(text, categories, paid, start, end, onlyAvailable/*, sort*/);
+        List<Event> events = eventRepository.findEvents(text, categories, paid, start, end, onlyAvailable);
         List<EventShortDto> result = new ArrayList<>();
         for (Event e : events) {
             result.add(eventMapper.toEventShortDto(e, getViewByEvent(e.getId())));
