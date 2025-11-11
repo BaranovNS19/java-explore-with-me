@@ -3,6 +3,7 @@ package practicum.ru.product.category;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import practicum.ru.product.dto.CategoryDto;
+import practicum.ru.product.dto.NewCategoryDto;
 import practicum.ru.product.event.EventRepository;
 import practicum.ru.product.exception.ConflictException;
 import practicum.ru.product.exception.NotFoundException;
@@ -25,7 +26,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     @Override
-    public Category createCategory(CategoryDto categoryDto) {
+    public Category createCategory(NewCategoryDto categoryDto) {
         if (categoryRepository.findByName(categoryDto.getName()) != null) {
             throw new ConflictException("категория с именем [" + categoryDto.getName() + "] уже существует");
         }

@@ -5,6 +5,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import practicum.ru.product.dto.CategoryDto;
+import practicum.ru.product.dto.NewCategoryDto;
 
 import java.util.List;
 
@@ -20,8 +21,8 @@ public class CategoryController {
 
     @PostMapping("/admin/categories")
     @ResponseStatus(HttpStatus.CREATED)
-    public Category createCategory(@RequestBody @Valid CategoryDto categoryDto) {
-        return categoryService.createCategory(categoryDto);
+    public Category createCategory(@RequestBody @Valid NewCategoryDto newCategoryDto) {
+        return categoryService.createCategory(newCategoryDto);
     }
 
     @PatchMapping("/admin/categories/{catId}")

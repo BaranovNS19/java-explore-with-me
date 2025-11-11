@@ -32,10 +32,12 @@ public interface EventService {
                                   HttpServletRequest request);
 
     List<EventFullDto> getEventsByAdmin(List<Long> users,
-                                 List<String> states,
-                                 List<Long> categories,
-                                 String rangeStart,
-                                 String rangeEnd,
-                                 int from,
-                                 int size);
+                                        List<String> states,
+                                        List<Long> categories,
+                                        String rangeStart,
+                                        String rangeEnd,
+                                        int from,
+                                        int size);
+
+    int getViewByEvent(Long id);
 }

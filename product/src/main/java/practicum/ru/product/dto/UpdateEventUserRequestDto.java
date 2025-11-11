@@ -6,7 +6,6 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import practicum.ru.product.event.Location;
 import practicum.ru.product.event.StateAction;
 
 import java.time.LocalDateTime;
@@ -23,7 +22,7 @@ public class UpdateEventUserRequestDto {
     private String description;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
-    private Location location;
+    private LocationDto location;
     private Boolean paid;
     @Min(value = 0, message = "Лимит участников не может быть отрицательным")
     private Integer participantLimit;

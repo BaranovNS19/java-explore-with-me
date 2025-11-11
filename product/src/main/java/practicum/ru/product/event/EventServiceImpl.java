@@ -20,6 +20,7 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -54,7 +55,7 @@ public class EventServiceImpl implements EventService {
         }
         Event event = eventRepository.save(eventMapper.toEvent(newEventDto, category, user, Status.PENDING));
         return eventMapper.toEventFullDto(event, userMapper.toUserShortDto(user),
-                eventMapper.toLocationDto(event.getLocation()));
+                eventMapper.toLocationDto(event.getLocation()), getViewByEvent(event.getId()));
     }
 
     @Override
@@ -63,7 +64,7 @@ public class EventServiceImpl implements EventService {
         List<Event> events = eventRepository.findByInitiatorId(userId);
         List<EventShortDto> result = new ArrayList<>();
         for (Event e : events) {
-            result.add(eventMapper.toEventShortDto(e));
+            result.add(eventMapper.toEventShortDto(e, getViewByEvent(e.getId())));
         }
         return result.stream()
                 .skip(from)
@@ -73,11 +74,12 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventFullDto getEventByUser(Long userId, Long eventId) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         User user = userService.getUserById(userId);
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие с id [" + eventId + "] не найдено"));
         return eventMapper.toEventFullDto(event, userMapper.toUserShortDto(user),
-                eventMapper.toLocationDto(event.getLocation()));
+                eventMapper.toLocationDto(event.getLocation()), getViewByEvent(event.getId()));
     }
 
     @Override
@@ -111,7 +113,7 @@ public class EventServiceImpl implements EventService {
             event.setEventDate(updateEventUserRequestDto.getEventDate());
         }
         if (updateEventUserRequestDto.getLocation() != null) {
-            event.setLocation(updateEventUserRequestDto.getLocation());
+            event.setLocation(eventMapper.toLocation(updateEventUserRequestDto.getLocation()));
         }
         if (updateEventUserRequestDto.getPaid() != null) {
             event.setPaid(updateEventUserRequestDto.getPaid());
@@ -135,7 +137,7 @@ public class EventServiceImpl implements EventService {
         }
         eventRepository.save(event);
         return eventMapper.toEventFullDto(event, userMapper.toUserShortDto(userService.getUserById(userId)),
-                eventMapper.toLocationDto(event.getLocation()));
+                eventMapper.toLocationDto(event.getLocation()), getViewByEvent(event.getId()));
     }
 
     @Override
@@ -151,17 +153,9 @@ public class EventServiceImpl implements EventService {
         visitPostRequestDto.setUri(request.getRequestURI());
         visitPostRequestDto.setTimestamp(LocalDateTime.now());
         statisticFeignClient.addVisit(visitPostRequestDto);
-        List<String> uris = new ArrayList<>();
-        uris.add(request.getRequestURI());
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String start = LocalDateTime.now().minusDays(2).format(formatter);
-        String end = LocalDateTime.now().plusHours(1).format(formatter);
-        List<VisitGetResponseDto> visits = statisticFeignClient.getVisits(start, end, uris,
-                true);
-        event.setViews(Math.toIntExact(visits.getFirst().getHits()));
         eventRepository.save(event);
         return eventMapper.toEventFullDto(event, userMapper.toUserShortDto(event.getInitiator()),
-                eventMapper.toLocationDto(event.getLocation()));
+                eventMapper.toLocationDto(event.getLocation()), getViewByEvent(event.getId()));
     }
 
     @Override
@@ -184,7 +178,7 @@ public class EventServiceImpl implements EventService {
             event.setEventDate(updateEventAdminRequestDto.getEventDate());
         }
         if (updateEventAdminRequestDto.getLocation() != null) {
-            event.setLocation(updateEventAdminRequestDto.getLocation());
+            event.setLocation(eventMapper.toLocation(updateEventAdminRequestDto.getLocation()));
         }
         if (updateEventAdminRequestDto.getPaid() != null) {
             event.setPaid(updateEventAdminRequestDto.getPaid());
@@ -213,6 +207,7 @@ public class EventServiceImpl implements EventService {
             }
             if (updateEventAdminRequestDto.getStateAction().equals(StateAction.PUBLISH_EVENT)) {
                 event.setState(Status.PUBLISHED);
+                event.setPublishedOn(LocalDateTime.now());
             }
             if (updateEventAdminRequestDto.getStateAction().equals(StateAction.REJECT_EVENT)) {
                 event.setState(Status.CANCELED);
@@ -220,7 +215,7 @@ public class EventServiceImpl implements EventService {
         }
         eventRepository.save(event);
         return eventMapper.toEventFullDto(event, userMapper.toUserShortDto(event.getInitiator()),
-                eventMapper.toLocationDto(event.getLocation()));
+                eventMapper.toLocationDto(event.getLocation()), getViewByEvent(event.getId()));
     }
 
     @Override
@@ -252,32 +247,11 @@ public class EventServiceImpl implements EventService {
                 throw new BadRequestException("Дата окончания не может быть раньше даты начала");
             }
         }
-//        List<Event> events = eventRepository.findEvents(text, categories, paid, start, end, onlyAvailable/*, sort*/);
-//        List<EventShortDto> result = new ArrayList<>();
-//        for (Event e : events) {
-//            result.add(eventMapper.toEventShortDto(e));
-//        }
-        List<Event> events = eventRepository.findEvents();
-        events = events.stream()
-                .filter(e -> text == null ||
-                        e.getAnnotation().toLowerCase().contains(text.toLowerCase()) ||
-                        e.getDescription().toLowerCase().contains(text.toLowerCase()))
-                .filter(e -> categories == null || categories.isEmpty() || categories.contains(e.getCategory().getId()))
-                .filter(e -> paid == null || e.isPaid() == paid)
-                .filter(e -> start == null || e.getEventDate().isAfter(start) || e.getEventDate().isEqual(start))
-                .filter(e -> end == null || e.getEventDate().isBefore(end) || e.getEventDate().isEqual(end))
-                .filter(e -> onlyAvailable == null || !onlyAvailable || e.getConfirmedRequests() < e.getParticipantLimit())
-                .collect(Collectors.toList());
-
-        if ("VIEWS".equals(sort)) {
-            events.sort(Comparator.comparing(Event::getViews).reversed());
-        } else {
-            events.sort(Comparator.comparing(Event::getEventDate));
+        List<Event> events = eventRepository.findEvents(text, categories, paid, start, end, onlyAvailable/*, sort*/);
+        List<EventShortDto> result = new ArrayList<>();
+        for (Event e : events) {
+            result.add(eventMapper.toEventShortDto(e, getViewByEvent(e.getId())));
         }
-
-        List<EventShortDto> result = events.stream()
-                .map(eventMapper::toEventShortDto)
-                .toList();
         return result.stream()
                 .skip(from)
                 .limit(size)
@@ -301,34 +275,32 @@ public class EventServiceImpl implements EventService {
         } else {
             endDateTime = null;
         }
-
-        List<Status> statusList;
+        List<Status> statusList = new ArrayList<>();
         if (states != null && !states.isEmpty()) {
-            statusList = states.stream()
-                    .map(Status::valueOf)
-                    .collect(Collectors.toList());
-        } else {
-            statusList = null;
+            for (String s : states) {
+                statusList.add(Status.valueOf(s.toUpperCase()));
+            }
         }
+        List<Event> events = eventRepository.findEventsByAdmin(users, statusList, categories, startDateTime, endDateTime);
+        List<EventFullDto> result = new ArrayList<>();
+        for (Event e : events) {
+            result.add(eventMapper.toEventFullDto(e, userMapper.toUserShortDto(e.getInitiator()),
+                    eventMapper.toLocationDto(e.getLocation()), getViewByEvent(e.getId())));
+        }
+        return result;
+    }
 
-        List<Event> events = eventRepository.findAllEvents();
-
-        events = events.stream()
-                .filter(e -> users == null || users.isEmpty() || users.contains(e.getInitiator().getId()))
-                .filter(e -> statusList == null || statusList.isEmpty() || statusList.contains(e.getState()))
-                .filter(e -> categories == null || categories.isEmpty() || categories.contains(e.getCategory().getId()))
-                .filter(e -> startDateTime == null || e.getEventDate().isAfter(startDateTime) || e.getEventDate().isEqual(startDateTime))
-                .filter(e -> endDateTime == null || e.getEventDate().isBefore(endDateTime) || e.getEventDate().isEqual(endDateTime))
-                .toList();
-
-        List<EventFullDto> result = events.stream()
-                .map(e -> eventMapper.toEventFullDto(e, userMapper.toUserShortDto(e.getInitiator()),
-                        eventMapper.toLocationDto(e.getLocation())))
-                .toList();
-
-        return result.stream()
-                .skip(from)
-                .limit(size)
-                .collect(Collectors.toList());
+    @Override
+    public int getViewByEvent(Long id) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        List<String> uris = new ArrayList<>();
+        uris.add("/events/" + id);
+        String startDate = LocalDateTime.now().minusDays(1).format(formatter);
+        String endDate = LocalDateTime.now().plusDays(1).format(formatter);
+        List<VisitGetResponseDto> views = statisticFeignClient.getVisits(startDate, endDate, uris, true);
+        if (views.isEmpty()) {
+            return 0;
+        }
+        return Math.toIntExact(views.getFirst().getHits());
     }
 }

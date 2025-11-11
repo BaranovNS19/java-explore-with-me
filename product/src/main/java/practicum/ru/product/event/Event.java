@@ -41,5 +41,4 @@ public class Event {
     @Enumerated(EnumType.STRING)
     private Status state;
     private String title;
-    private int views;
 }

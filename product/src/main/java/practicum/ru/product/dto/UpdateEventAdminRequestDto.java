@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import practicum.ru.product.event.Location;
 import practicum.ru.product.event.StateAction;
 
 import java.time.LocalDateTime;
@@ -21,7 +20,7 @@ public class UpdateEventAdminRequestDto {
     private String description;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime eventDate;
-    private Location location;
+    private LocationDto location;
     private Boolean paid;
     private Integer participantLimit;
     private Boolean requestModeration;

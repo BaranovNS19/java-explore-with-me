@@ -3,6 +3,7 @@ package practicum.ru.product.event;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import practicum.ru.product.category.Category;
+import practicum.ru.product.category.CategoryMapper;
 import practicum.ru.product.dto.*;
 import practicum.ru.product.user.User;
 import practicum.ru.product.user.UserMapper;
@@ -15,10 +16,12 @@ public class EventMapper {
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private final UserMapper userMapper;
+    private final CategoryMapper categoryMapper;
 
     @Autowired
-    public EventMapper(UserMapper userMapper) {
+    public EventMapper(UserMapper userMapper, CategoryMapper categoryMapper) {
         this.userMapper = userMapper;
+        this.categoryMapper = categoryMapper;
     }
 
     public Event toEvent(NewEventDto newEventDto, Category category, User user, Status status) {
@@ -27,23 +30,21 @@ public class EventMapper {
         event.setCategory(category);
         event.setDescription(newEventDto.getDescription());
         event.setEventDate(LocalDateTime.parse(newEventDto.getEventDate(), formatter));
-        event.setId(newEventDto.getId());
-        event.setLocation(newEventDto.getLocation());
+        event.setLocation(toLocation(newEventDto.getLocation()));
         event.setPaid(newEventDto.isPaid());
         event.setParticipantLimit(newEventDto.getParticipantLimit());
         event.setRequestModeration(newEventDto.isRequestModeration());
         event.setTitle(newEventDto.getTitle());
         event.setInitiator(user);
         event.setCreatedOn(LocalDateTime.now());
-        event.setPublishedOn(LocalDateTime.now());
         event.setState(status);
         return event;
     }
 
-    public EventFullDto toEventFullDto(Event event, UserShortDto userShortDto, LocationDto locationDto) {
+    public EventFullDto toEventFullDto(Event event, UserShortDto userShortDto, LocationDto locationDto, int views) {
         EventFullDto eventFullDto = new EventFullDto();
         eventFullDto.setAnnotation(event.getAnnotation());
-        eventFullDto.setCategory(event.getCategory());
+        eventFullDto.setCategory(categoryMapper.toCategoryDto(event.getCategory()));
         eventFullDto.setConfirmedRequests(event.getConfirmedRequests());
         eventFullDto.setCreatedOn(event.getCreatedOn());
         eventFullDto.setDescription(event.getDescription());
@@ -57,7 +58,7 @@ public class EventMapper {
         eventFullDto.setRequestModeration(event.isRequestModeration());
         eventFullDto.setState(event.getState());
         eventFullDto.setTitle(event.getTitle());
-        eventFullDto.setViews(event.getViews());
+        eventFullDto.setViews(views);
         return eventFullDto;
     }
 
@@ -68,17 +69,25 @@ public class EventMapper {
         return locationDto;
     }
 
-    public EventShortDto toEventShortDto(Event event) {
+    public Location toLocation(LocationDto locationDto) {
+        Location location = new Location();
+        location.setId(location.getId());
+        location.setLat(locationDto.getLat());
+        location.setLon(locationDto.getLon());
+        return location;
+    }
+
+    public EventShortDto toEventShortDto(Event event, int views) {
         EventShortDto eventShortDto = new EventShortDto();
         eventShortDto.setAnnotation(event.getAnnotation());
-        eventShortDto.setCategory(event.getCategory());
+        eventShortDto.setCategory(categoryMapper.toCategoryDto(event.getCategory()));
         eventShortDto.setConfirmedRequests(event.getConfirmedRequests());
         eventShortDto.setEventDate(event.getEventDate());
         eventShortDto.setId(event.getId());
         eventShortDto.setInitiator(userMapper.toUserShortDto(event.getInitiator()));
         eventShortDto.setPaid(event.isPaid());
         eventShortDto.setTitle(event.getTitle());
-        eventShortDto.setViews(event.getViews());
+        eventShortDto.setViews(views);
         return eventShortDto;
     }
 }

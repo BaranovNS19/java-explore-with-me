@@ -4,7 +4,6 @@ import com.fasterxml.jackson.annotation.JsonFormat;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import practicum.ru.product.category.Category;
 import practicum.ru.product.event.Status;
 
 import java.time.LocalDateTime;
@@ -14,7 +13,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class EventFullDto {
     private String annotation;
-    private Category category;
+    private CategoryDto category;
     private int confirmedRequests;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createdOn;

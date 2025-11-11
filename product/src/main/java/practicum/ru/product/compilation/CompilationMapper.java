@@ -7,6 +7,7 @@ import practicum.ru.product.dto.EventShortDto;
 import practicum.ru.product.dto.NewCompilationDto;
 import practicum.ru.product.event.Event;
 import practicum.ru.product.event.EventMapper;
+import practicum.ru.product.event.EventService;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -15,15 +16,16 @@ import java.util.Set;
 public class CompilationMapper {
 
     private final EventMapper eventMapper;
+    private final EventService eventService;
 
     @Autowired
-    public CompilationMapper(EventMapper eventMapper) {
+    public CompilationMapper(EventMapper eventMapper, EventService eventService) {
         this.eventMapper = eventMapper;
+        this.eventService = eventService;
     }
 
     public Compilation toCompilation(NewCompilationDto newCompilationDto, Set<Event> events) {
         Compilation compilation = new Compilation();
-        compilation.setId(newCompilationDto.getId());
         compilation.setEvents(events);
         compilation.setPinned(newCompilationDto.isPinned());
         compilation.setTitle(newCompilationDto.getTitle());
@@ -39,7 +41,7 @@ public class CompilationMapper {
         Set<EventShortDto> eventsShort = new HashSet<>();
         if (events != null) {
             for (Event e : events) {
-                eventsShort.add(eventMapper.toEventShortDto(e));
+                eventsShort.add(eventMapper.toEventShortDto(e, eventService.getViewByEvent(e.getId())));
             }
         }
         compilationDto.setEvents(eventsShort);

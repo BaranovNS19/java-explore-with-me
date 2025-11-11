@@ -24,8 +24,7 @@ CREATE TABLE IF NOT EXISTS events (
     published_on TIMESTAMP,
     request_moderation BOOLEAN,
     state VARCHAR,
-    title VARCHAR,
-    views INT
+    title VARCHAR
     );
 
 CREATE TABLE IF NOT EXISTS locations (

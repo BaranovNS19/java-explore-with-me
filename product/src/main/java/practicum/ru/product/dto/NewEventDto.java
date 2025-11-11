@@ -7,13 +7,11 @@ import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import practicum.ru.product.event.Location;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 public class NewEventDto {
-    private Long id;
     @NotBlank
     @Size(min = 20, max = 2000, message = "Длина краткого описания должна быть от {min} до {max} символов")
     private String annotation;
@@ -25,7 +23,7 @@ public class NewEventDto {
     @NotBlank
     private String eventDate;
     @NotNull
-    private Location location;
+    private LocationDto location;
     private boolean paid;
     @Min(value = 0, message = "Лимит участников не может быть отрицательным")
     private int participantLimit;
