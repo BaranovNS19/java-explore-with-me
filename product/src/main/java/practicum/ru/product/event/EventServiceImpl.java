@@ -279,7 +279,8 @@ public class EventServiceImpl implements EventService {
                 statusList.add(Status.valueOf(s.toUpperCase()));
             }
         }
-        List<Event> events = eventRepository.findEventsByAdmin(users, statusList, categories, startDateTime, endDateTime);
+        List<Event> events = eventRepository.findEventsByAdmin(users, statusList, categories,
+                startDateTime, endDateTime);
         List<EventFullDto> result = new ArrayList<>();
         for (Event e : events) {
             result.add(eventMapper.toEventFullDto(e, userMapper.toUserShortDto(e.getInitiator()),
