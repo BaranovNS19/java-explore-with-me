@@ -286,7 +286,10 @@ public class EventServiceImpl implements EventService {
             result.add(eventMapper.toEventFullDto(e, userMapper.toUserShortDto(e.getInitiator()),
                     eventMapper.toLocationDto(e.getLocation()), getViewByEvent(e.getId())));
         }
-        return result;
+        return result.stream()
+                .skip(from)
+                .limit(size)
+                .collect(Collectors.toList());
     }
 
     @Override
