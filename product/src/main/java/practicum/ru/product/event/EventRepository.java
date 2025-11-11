@@ -4,7 +4,6 @@ import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
-import org.springframework.data.jpa.repository.Query;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -57,9 +56,6 @@ public interface EventRepository extends JpaRepository<Event, Long>, JpaSpecific
         return findAll(spec, Sort.by(Sort.Direction.ASC, "eventDate"));
     }
 
-//    @Query("SELECT e FROM Event e WHERE " +
-//            "e.state = 'PUBLISHED'")
-//    List<Event> findEvents();
 
     List<Event> findByCategoryId(Long categoryId);
 
@@ -94,8 +90,4 @@ public interface EventRepository extends JpaRepository<Event, Long>, JpaSpecific
 
         return findAll(spec);
     }
-
-
-    @Query("SELECT e FROM Event e")
-    List<Event> findAllEvents();
 }
