@@ -1,13 +1,15 @@
 package practicum.ru.product.event;
 
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
 
-public interface EventRepository extends JpaRepository<Event, Long> {
+public interface EventRepository extends JpaRepository<Event, Long>, JpaSpecificationExecutor<Event> {
     List<Event> findByInitiatorId(Long initiatorId);
 
 //    @Query("SELECT e FROM Event e WHERE " +
@@ -37,17 +39,36 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     List<Event> findByCategoryId(Long categoryId);
 
 
-    @Query("SELECT e FROM Event e WHERE " +
-            "(:users IS NULL OR e.initiator.id IN :users) AND " +
-            "(:states IS NULL OR e.state IN :states) AND " +
-            "(:categories IS NULL OR e.category.id IN :categories) AND " +
-            "(:rangeStart IS NULL OR e.eventDate >= :rangeStart) AND " +
-            "(:rangeEnd IS NULL OR e.eventDate <= :rangeEnd)")
-    List<Event> findEventsByAdmin(@Param("users") List<Long> users,
-                                  @Param("states") List<Status> states,
-                                  @Param("categories") List<Long> categories,
-                                  @Param("rangeStart") LocalDateTime rangeStart,
-                                  @Param("rangeEnd") LocalDateTime rangeEnd);
+    default List<Event> findEventsByAdmin(List<Long> users,
+                                          List<Status> states,
+                                          List<Long> categories,
+                                          LocalDateTime rangeStart,
+                                          LocalDateTime rangeEnd) {
+
+        Specification<Event> spec = Specification.where(null);
+
+        if (users != null && !users.isEmpty()) {
+            spec = spec.and((root, query, cb) -> root.get("initiator").get("id").in(users));
+        }
+
+        if (states != null && !states.isEmpty()) {
+            spec = spec.and((root, query, cb) -> root.get("state").in(states));
+        }
+
+        if (categories != null && !categories.isEmpty()) {
+            spec = spec.and((root, query, cb) -> root.get("category").get("id").in(categories));
+        }
+
+        if (rangeStart != null) {
+            spec = spec.and((root, query, cb) -> cb.greaterThanOrEqualTo(root.get("eventDate"), rangeStart));
+        }
+
+        if (rangeEnd != null) {
+            spec = spec.and((root, query, cb) -> cb.lessThanOrEqualTo(root.get("eventDate"), rangeEnd));
+        }
+
+        return findAll(spec);
+    }
 
 
     @Query("SELECT e FROM Event e")
