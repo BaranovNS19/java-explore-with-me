@@ -37,15 +37,15 @@ public interface EventRepository extends JpaRepository<Event, Long> {
     List<Event> findByCategoryId(Long categoryId);
 
     @Query(value = "SELECT e.* FROM events e WHERE " +
-            "(CASE WHEN :users IS NULL THEN true ELSE e.initiator_id IN (:users) END) AND " +
-            "(CASE WHEN :states IS NULL THEN true ELSE e.state IN (:states) END) AND " +
-            "(CASE WHEN :categories IS NULL THEN true ELSE e.category_id IN (:categories) END) AND " +
+            "(array_length(:users, 1) IS NULL OR e.initiator_id = ANY(:users)) AND " +
+            "(array_length(:states, 1) IS NULL OR e.state = ANY(:states)) AND " +
+            "(array_length(:categories, 1) IS NULL OR e.category_id = ANY(:categories)) AND " +
             "(:rangeStart IS NULL OR e.event_date >= :rangeStart) AND " +
             "(:rangeEnd IS NULL OR e.event_date <= :rangeEnd)",
             nativeQuery = true)
-    List<Event> findEventsByAdmin(@Param("users") List<Long> users,
-                                  @Param("states") List<String> states,
-                                  @Param("categories") List<Long> categories,
+    List<Event> findEventsByAdmin(@Param("users") Long[] users,
+                                  @Param("states") String[] states,
+                                  @Param("categories") Long[] categories,
                                   @Param("rangeStart") LocalDateTime rangeStart,
                                   @Param("rangeEnd") LocalDateTime rangeEnd);
 
