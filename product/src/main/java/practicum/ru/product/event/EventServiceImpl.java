@@ -279,10 +279,7 @@ public class EventServiceImpl implements EventService {
                 statusList.add(Status.valueOf(s.toUpperCase()));
             }
         }
-        Long[] usersArray = users != null ? users.toArray(new Long[0]) : null;
-        String[] statesArray = states != null ? states.toArray(new String[0]) : null;
-        Long[] categoriesArray = categories != null ? categories.toArray(new Long[0]) : null;
-        List<Event> events = eventRepository.findEventsByAdmin(usersArray, statesArray, categoriesArray, startDateTime, endDateTime);
+        List<Event> events = eventRepository.findEventsByAdmin(users, states, categories, startDateTime, endDateTime);
         List<EventFullDto> result = new ArrayList<>();
         for (Event e : events) {
             result.add(eventMapper.toEventFullDto(e, userMapper.toUserShortDto(e.getInitiator()),
