@@ -19,6 +19,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 @Slf4j
@@ -31,16 +32,20 @@ public class EventServiceImpl implements EventService {
     private final UserService userService;
     private final UserMapper userMapper;
     private final StatisticFeignClient statisticFeignClient;
+    private final CommentRepository commentRepository;
+    private final CommentMapper commentMapper;
 
     @Autowired
     public EventServiceImpl(EventRepository eventRepository, CategoryService categoryService, EventMapper eventMapper,
-                            UserService userService, UserMapper userMapper, StatisticFeignClient statisticFeignClient) {
+                            UserService userService, UserMapper userMapper, StatisticFeignClient statisticFeignClient, CommentRepository commentRepository, CommentMapper commentMapper) {
         this.eventRepository = eventRepository;
         this.categoryService = categoryService;
         this.eventMapper = eventMapper;
         this.userService = userService;
         this.userMapper = userMapper;
         this.statisticFeignClient = statisticFeignClient;
+        this.commentRepository = commentRepository;
+        this.commentMapper = commentMapper;
     }
 
     @Override
@@ -53,7 +58,8 @@ public class EventServiceImpl implements EventService {
         }
         Event event = eventRepository.save(eventMapper.toEvent(newEventDto, category, user, Status.PENDING));
         return eventMapper.toEventFullDto(event, userMapper.toUserShortDto(user),
-                eventMapper.toLocationDto(event.getLocation()), getViewByEvent(event.getId()));
+                eventMapper.toLocationDto(event.getLocation()), getViewByEvent(event.getId()),
+                commentMapper.toListCommentDto(commentRepository.findByEventId(event.getId())));
     }
 
     @Override
@@ -77,7 +83,8 @@ public class EventServiceImpl implements EventService {
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Событие с id [" + eventId + "] не найдено"));
         return eventMapper.toEventFullDto(event, userMapper.toUserShortDto(user),
-                eventMapper.toLocationDto(event.getLocation()), getViewByEvent(event.getId()));
+                eventMapper.toLocationDto(event.getLocation()), getViewByEvent(event.getId()),
+                commentMapper.toListCommentDto(commentRepository.findByEventId(event.getId())));
     }
 
     @Override
@@ -135,7 +142,8 @@ public class EventServiceImpl implements EventService {
         }
         eventRepository.save(event);
         return eventMapper.toEventFullDto(event, userMapper.toUserShortDto(userService.getUserById(userId)),
-                eventMapper.toLocationDto(event.getLocation()), getViewByEvent(event.getId()));
+                eventMapper.toLocationDto(event.getLocation()), getViewByEvent(event.getId()),
+                commentMapper.toListCommentDto(commentRepository.findByEventId(event.getId())));
     }
 
     @Override
@@ -153,7 +161,8 @@ public class EventServiceImpl implements EventService {
         statisticFeignClient.addVisit(visitPostRequestDto);
         eventRepository.save(event);
         return eventMapper.toEventFullDto(event, userMapper.toUserShortDto(event.getInitiator()),
-                eventMapper.toLocationDto(event.getLocation()), getViewByEvent(event.getId()));
+                eventMapper.toLocationDto(event.getLocation()), getViewByEvent(event.getId()),
+                commentMapper.toListCommentDto(commentRepository.findByEventId(event.getId())));
     }
 
     @Override
@@ -213,7 +222,8 @@ public class EventServiceImpl implements EventService {
         }
         eventRepository.save(event);
         return eventMapper.toEventFullDto(event, userMapper.toUserShortDto(event.getInitiator()),
-                eventMapper.toLocationDto(event.getLocation()), getViewByEvent(event.getId()));
+                eventMapper.toLocationDto(event.getLocation()), getViewByEvent(event.getId()),
+                commentMapper.toListCommentDto(commentRepository.findByEventId(event.getId())));
     }
 
     @Override
@@ -284,7 +294,8 @@ public class EventServiceImpl implements EventService {
         List<EventFullDto> result = new ArrayList<>();
         for (Event e : events) {
             result.add(eventMapper.toEventFullDto(e, userMapper.toUserShortDto(e.getInitiator()),
-                    eventMapper.toLocationDto(e.getLocation()), getViewByEvent(e.getId())));
+                    eventMapper.toLocationDto(e.getLocation()), getViewByEvent(e.getId()),
+                    commentMapper.toListCommentDto(commentRepository.findByEventId(e.getId()))));
         }
         return result.stream()
                 .skip(from)
@@ -304,5 +315,50 @@ public class EventServiceImpl implements EventService {
             return 0;
         }
         return Math.toIntExact(views.getFirst().getHits());
+    }
+
+    @Override
+    public EventFullDto addComment(Long userId, Long eventId, NewCommentDto newCommentDto) {
+        User user = userService.getUserById(userId);
+        Event event = getEventById(eventId);
+        if (!event.getState().equals(Status.PUBLISHED)) {
+            throw new ConflictException("Событие [" + event.getId() + "] не опубликовано");
+        }
+        commentRepository.save(commentMapper.toComment(newCommentDto, user, event));
+        return eventMapper.toEventFullDto(event, userMapper.toUserShortDto(event.getInitiator()),
+                eventMapper.toLocationDto(event.getLocation()), getViewByEvent(event.getId()),
+                commentMapper.toListCommentDto(commentRepository.findByEventId(event.getId())));
+    }
+
+    @Override
+    public EventFullDto updateComment(Long userId, Long eventId, NewCommentDto newCommentDto, Long commentId) {
+        User user = userService.getUserById(userId);
+        Event event = getEventById(eventId);
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new NotFoundException("Комментарий с id [" + commentId + "] не найден"));
+        if (!Objects.equals(comment.getEvent().getId(), eventId)) {
+            throw new ConflictException("Комментарий [" + commentId + "] отсутствует у события [" + eventId + "]");
+        }
+        if (!Objects.equals(comment.getAuthor().getId(), userId)) {
+            throw new ConflictException("Пользователь [" + userId + "] не является автором комментария [" + commentId + "]");
+        }
+        comment.setText(newCommentDto.getText());
+        commentRepository.save(comment);
+        return eventMapper.toEventFullDto(event, userMapper.toUserShortDto(event.getInitiator()),
+                eventMapper.toLocationDto(event.getLocation()), getViewByEvent(event.getId()),
+                commentMapper.toListCommentDto(commentRepository.findByEventId(event.getId())));
+    }
+
+    @Override
+    public void deleteComment(Long userId, Long eventId, Long commentId) {
+        Comment comment = commentRepository.findById(commentId)
+                .orElseThrow(() -> new NotFoundException("Комментарий с id [" + commentId + "] не найден"));
+        if (!Objects.equals(comment.getEvent().getId(), eventId)) {
+            throw new ConflictException("Комментарий [" + commentId + "] отсутствует у события [" + eventId + "]");
+        }
+        if (!Objects.equals(comment.getAuthor().getId(), userId)) {
+            throw new ConflictException("Пользователь [" + userId + "] не является автором комментария [" + commentId + "]");
+        }
+        commentRepository.delete(comment);
     }
 }

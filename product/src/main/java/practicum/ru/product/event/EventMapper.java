@@ -10,6 +10,7 @@ import practicum.ru.product.user.UserMapper;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
+import java.util.List;
 
 @Component
 public class EventMapper {
@@ -41,7 +42,8 @@ public class EventMapper {
         return event;
     }
 
-    public EventFullDto toEventFullDto(Event event, UserShortDto userShortDto, LocationDto locationDto, int views) {
+    public EventFullDto toEventFullDto(Event event, UserShortDto userShortDto, LocationDto locationDto, int views,
+                                       List<CommentDto> comments) {
         EventFullDto eventFullDto = new EventFullDto();
         eventFullDto.setAnnotation(event.getAnnotation());
         eventFullDto.setCategory(categoryMapper.toCategoryDto(event.getCategory()));
@@ -59,6 +61,7 @@ public class EventMapper {
         eventFullDto.setState(event.getState());
         eventFullDto.setTitle(event.getTitle());
         eventFullDto.setViews(views);
+        eventFullDto.setComments(comments);
         return eventFullDto;
     }
 

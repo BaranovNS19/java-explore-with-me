@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import practicum.ru.product.event.Status;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -31,4 +32,5 @@ public class EventFullDto {
     private Status state;
     private String title;
     private int views;
+    private List<CommentDto> comments;
 }
