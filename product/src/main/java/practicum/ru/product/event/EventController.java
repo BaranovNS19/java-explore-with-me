@@ -73,13 +73,34 @@ public class EventController {
 
     @GetMapping("/admin/events")
     public List<EventFullDto> getEventsByAdmin(@RequestParam(required = false) List<Long> users,
-                                        @RequestParam(required = false) List<String> states,
-                                        @RequestParam(required = false) List<Long> categories,
-                                        @RequestParam(required = false) String rangeStart,
-                                        @RequestParam(required = false) String rangeEnd,
-                                        @RequestParam(defaultValue = "0") int from,
-                                        @RequestParam(defaultValue = "10") int size) {
+                                               @RequestParam(required = false) List<String> states,
+                                               @RequestParam(required = false) List<Long> categories,
+                                               @RequestParam(required = false) String rangeStart,
+                                               @RequestParam(required = false) String rangeEnd,
+                                               @RequestParam(defaultValue = "0") int from,
+                                               @RequestParam(defaultValue = "10") int size) {
         return eventService.getEventsByAdmin(users, states, categories, rangeStart, rangeEnd, from, size);
 
+    }
+
+    @PostMapping("/users/{userId}/events/{eventId}/comments")
+    @ResponseStatus(HttpStatus.CREATED)
+    public EventFullDto addComment(@PathVariable Long userId, @PathVariable Long eventId,
+                                   @RequestBody @Valid NewCommentDto newCommentDto) {
+        return eventService.addComment(userId, eventId, newCommentDto);
+    }
+
+    @PatchMapping("/users/{userId}/events/{eventId}/comments/{commentId}")
+    public EventFullDto updateComment(@PathVariable Long userId, @PathVariable Long eventId,
+                                      @RequestBody @Valid NewCommentDto newCommentDto,
+                                      @PathVariable Long commentId) {
+        return eventService.updateComment(userId, eventId, newCommentDto, commentId);
+    }
+
+    @DeleteMapping("/users/{userId}/events/{eventId}/comments/{commentId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteComment(@PathVariable Long userId, @PathVariable Long eventId,
+                              @PathVariable Long commentId) {
+        eventService.deleteComment(userId, eventId, commentId);
     }
 }

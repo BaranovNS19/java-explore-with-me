@@ -40,4 +40,10 @@ public interface EventService {
                                         int size);
 
     int getViewByEvent(Long id);
+
+    EventFullDto addComment(Long userId, Long eventId, NewCommentDto newCommentDto);
+
+    EventFullDto updateComment(Long userId, Long eventId, NewCommentDto newCommentDto, Long commentId);
+
+    void deleteComment(Long userId, Long eventId, Long commentId);
 }
