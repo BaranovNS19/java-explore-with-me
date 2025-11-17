@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import practicum.ru.product.category.Category;
 import practicum.ru.product.category.CategoryService;
 import practicum.ru.product.client.StatisticFeignClient;
@@ -317,6 +318,7 @@ public class EventServiceImpl implements EventService {
         return Math.toIntExact(views.getFirst().getHits());
     }
 
+    @Transactional
     @Override
     public EventFullDto addComment(Long userId, Long eventId, NewCommentDto newCommentDto) {
         User user = userService.getUserById(userId);
@@ -330,6 +332,7 @@ public class EventServiceImpl implements EventService {
                 commentMapper.toListCommentDto(commentRepository.findByEventId(event.getId())));
     }
 
+    @Transactional
     @Override
     public EventFullDto updateComment(Long userId, Long eventId, NewCommentDto newCommentDto, Long commentId) {
         User user = userService.getUserById(userId);
@@ -349,6 +352,7 @@ public class EventServiceImpl implements EventService {
                 commentMapper.toListCommentDto(commentRepository.findByEventId(event.getId())));
     }
 
+    @Transactional
     @Override
     public void deleteComment(Long userId, Long eventId, Long commentId) {
         Comment comment = commentRepository.findById(commentId)

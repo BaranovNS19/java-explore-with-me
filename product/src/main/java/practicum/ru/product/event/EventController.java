@@ -83,21 +83,21 @@ public class EventController {
 
     }
 
-    @PostMapping("user/{userId}/event/{eventId}/comments")
+    @PostMapping("/users/{userId}/events/{eventId}/comments")
     @ResponseStatus(HttpStatus.CREATED)
     public EventFullDto addComment(@PathVariable Long userId, @PathVariable Long eventId,
                                    @RequestBody @Valid NewCommentDto newCommentDto) {
         return eventService.addComment(userId, eventId, newCommentDto);
     }
 
-    @PatchMapping("user/{userId}/event/{eventId}/comments/{commentId}")
+    @PatchMapping("/users/{userId}/events/{eventId}/comments/{commentId}")
     public EventFullDto updateComment(@PathVariable Long userId, @PathVariable Long eventId,
                                       @RequestBody @Valid NewCommentDto newCommentDto,
                                       @PathVariable Long commentId) {
         return eventService.updateComment(userId, eventId, newCommentDto, commentId);
     }
 
-    @DeleteMapping("user/{userId}/event/{eventId}/comments/{commentId}")
+    @DeleteMapping("/users/{userId}/events/{eventId}/comments/{commentId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteComment(@PathVariable Long userId, @PathVariable Long eventId,
                               @PathVariable Long commentId) {

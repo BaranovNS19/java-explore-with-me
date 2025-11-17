@@ -60,3 +60,16 @@ CREATE TABLE IF NOT EXISTS comments (
     event_id BIGINT,
     author_id BIGINT
     );
+
+    ALTER TABLE comments
+    ADD CONSTRAINT IF NOT EXISTS fk_comments_event
+    FOREIGN KEY (event_id) REFERENCES events(id);
+
+    ALTER TABLE comments
+    ADD CONSTRAINT IF NOT EXISTS fk_comments_author
+    FOREIGN KEY (author_id) REFERENCES users(id);
+
+    CREATE INDEX IF NOT EXISTS idx_comments_event_id ON comments(event_id);
+    CREATE INDEX IF NOT EXISTS idx_comments_author_id ON comments(author_id);
+    CREATE INDEX IF NOT EXISTS idx_comments_event_author ON comments(event_id, author_id);
+    CREATE INDEX IF NOT EXISTS idx_comments_created ON comments(created);

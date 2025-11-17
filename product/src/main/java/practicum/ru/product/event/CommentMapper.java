@@ -5,7 +5,6 @@ import practicum.ru.product.dto.CommentDto;
 import practicum.ru.product.dto.NewCommentDto;
 import practicum.ru.product.user.User;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,7 +16,7 @@ public class CommentMapper {
         comment.setText(newCommentDto.getText());
         comment.setAuthor(user);
         comment.setEvent(event);
-        comment.setCreated(LocalDateTime.now());
+        comment.setCreated(comment.getCreated());
         return comment;
     }
 
