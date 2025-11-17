@@ -62,11 +62,11 @@ CREATE TABLE IF NOT EXISTS comments (
     );
 
     ALTER TABLE comments
-    ADD CONSTRAINT IF NOT EXISTS fk_comments_event
+    ADD CONSTRAINT fk_comments_event
     FOREIGN KEY (event_id) REFERENCES events(id);
 
     ALTER TABLE comments
-    ADD CONSTRAINT IF NOT EXISTS fk_comments_author
+    ADD CONSTRAINT fk_comments_author
     FOREIGN KEY (author_id) REFERENCES users(id);
 
     CREATE INDEX IF NOT EXISTS idx_comments_event_id ON comments(event_id);
